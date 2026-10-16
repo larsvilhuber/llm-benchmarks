@@ -43,12 +43,18 @@ Startup takes about 3 minutes once the weights are cached (torch.compile + CUDA 
 Result: 118,535 tokens of KV cache, 14.5x concurrency at 8,192 tokens/request; about
 11.2-11.4 GB of each 12 GB card in use.
 
+For a single user at the model's full context window (131072 tokens), use
+`--max-model-len 131072 --max-num-seqs 1` instead of `--max-model-len 8192 --max-num-seqs 8`.
+That starts with the same `--gpu-memory-utilization 0.93` and reports 277,680 tokens of KV cache
+(Gemma 4's sliding-window layers keep the cache small), about 11.5 + 11.3 GB used. A 127k-token
+prompt completes in ~110 s (prefill) and decodes at ~40 tok/s.
+
 Why each flag:
 
 - `--tensor-parallel-size 2`: bf16 Gemma 4 E4B is ~15 GB, which does not fit one 12 GB card.
   Each GPU holds ~7.5 GB of weights. PCIe-only peer access works.
-- `--max-model-len 8192`: the 131072 default makes the KV cache budget impossible on 12 GB cards;
-  the benchmark prompts are short.
+- `--max-model-len 8192`: for the short-prompt benchmark. The full 131072 also fits, see above
+  (use `--max-num-seqs 1`).
 - `--host 127.0.0.1`: no authentication; use `--api-key` if you bind to `0.0.0.0`.
 
 ## Problems hit, in order

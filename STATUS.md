@@ -30,6 +30,10 @@ Ollama model tag, Ollama `OLLAMA_NUM_PARALLEL`.
 ### mac-studio agent (to do)
 - [ ] Keep `README-mlx.md` current (vLLM version and launch flags, model, how to enable sleep mode)
 
+cv-ai max-context run (131072 tokens, single user): done, results in the benchmark 02 README. Ollama tag
+`gemma4:e4b-it-bf16-ctx128k` (num_ctx 131072) was created on cv-ai for it; vLLM used
+`--max-model-len 131072 --max-num-seqs 1`. Open: vLLM prefill is slower than Ollama at long context (cause not investigated).
+
 ## Known issues
 - On the short prompt Ollama emits 256 tokens, vLLM 57. Confirmed on cv-ai: Ollama produces a thinking
   trace (`reasoning` set, `content` empty, `finish_reason: length`); vLLM does not. Totals are not

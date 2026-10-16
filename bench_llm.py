@@ -13,6 +13,7 @@ Example:
 import argparse
 import atexit
 import json
+import random
 import os
 import socket
 import statistics
@@ -31,6 +32,25 @@ PROMPTS = {
     "long": "Write a detailed essay (about 500 words) on how the transformer architecture changed "
             "natural language processing, covering attention, scaling, and pretraining.",
 }
+
+
+WORDS = ("river stone market lantern copper winter orbit ledger meadow signal harbor "
+         "violin granite compass ember tunnel paper cobalt thicket anchor saddle quartz "
+         "horizon barley mirror cinder voyage timber puzzle velvet glacier harvest").split()
+
+
+def context_prompt(n_tokens):
+    """Filler document of roughly n_tokens, unique per call so prefix caches cannot hit."""
+    rng = random.Random()
+    nonce = f"{rng.getrandbits(64):016x}"
+    words = int(n_tokens / 1.1)  # ~1.1 tokens per word with these words; actual count is reported
+    body = " ".join(rng.choice(WORDS) for _ in range(words))
+    return (f"Document id {nonce}.\n{body}\n\n"
+            "Ignore the word list above. In two sentences, explain what a hash table is.")
+
+
+def get_prompt(name):
+    return context_prompt(int(name[3:])) if name.startswith("ctx") else PROMPTS[name]
 
 
 def normalize(url):
@@ -168,13 +188,14 @@ def bench(label, base, model, args, warmup=True):
         stream_chat(base, model, PROMPTS["short"], 16)
     results = {}
     for name in args.prompts:
-        runs = [stream_chat(base, model, PROMPTS[name], args.max_tokens) for _ in range(args.runs)]
+        runs = [stream_chat(base, model, get_prompt(name), args.max_tokens, timeout=1800)
+                for _ in range(args.runs)]
         results[name] = summarize(name, runs, "sequential")
     if args.concurrency > 1:
         name = args.prompts[-1]
         t0 = time.perf_counter()
         with ThreadPoolExecutor(args.concurrency) as ex:
-            runs = list(ex.map(lambda _: stream_chat(base, model, PROMPTS[name], args.max_tokens),
+            runs = list(ex.map(lambda _: stream_chat(base, model, get_prompt(name), args.max_tokens),
                                range(args.concurrency)))
         wall = time.perf_counter() - t0
         agg = sum(r["out_tokens"] for r in runs) / wall
@@ -186,8 +207,10 @@ def bench(label, base, model, args, warmup=True):
 
 def summarize(name, runs, note):
     med = lambda k: statistics.median(r[k] for r in runs)
-    s = {"first_ttft": runs[0]["ttft"], "ttft": med("ttft"), "tps": med("tps"), "total": med("total"), "out_tokens": med("out_tokens")}
-    print(f"{name:<22} TTFT {s['ttft']*1000:7.0f} ms | {s['tps']:7.1f} tok/s | "
+    s = {"first_ttft": runs[0]["ttft"], "ttft": med("ttft"), "tps": med("tps"), "total": med("total"), "out_tokens": med("out_tokens"),
+         "prompt_tokens": med("prompt_tokens") if all(r["prompt_tokens"] for r in runs) else None}
+    ptok = f"{s['prompt_tokens']:.0f} in | " if s["prompt_tokens"] else ""
+    print(f"{name:<22} {ptok}TTFT {s['ttft']*1000:7.0f} ms | {s['tps']:7.1f} tok/s | "
           f"total {s['total']:6.2f} s | {s['out_tokens']:.0f} tok  ({note}; 1st-req TTFT {s['first_ttft']*1000:.0f} ms)")
     return s
 
@@ -199,6 +222,9 @@ def main():
     p.add_argument("--vllm-model", help="default: first model reported by vLLM /v1/models")
     p.add_argument("--ollama-model", required=True)
     p.add_argument("--prompts", nargs="+", choices=PROMPTS, default=list(PROMPTS))
+    p.add_argument("--context-tokens", nargs="+", type=int, metavar="N",
+                   help="instead of --prompts, run filler prompts of about N tokens each "
+                        "(unique per request, so no prefix-cache hits); reports actual prompt tokens")
     p.add_argument("--runs", type=int, default=3)
     p.add_argument("--max-tokens", type=int, default=256)
     p.add_argument("--concurrency", type=int, default=4, help="parallel requests test; 1 disables")
@@ -214,6 +240,8 @@ def main():
     args = p.parse_args()
 
     vllm, ollama = normalize(args.vllm_url), normalize(args.ollama_url)
+    if args.context_tokens:
+        args.prompts = [f"ctx{n}" for n in args.context_tokens]
     run_vllm, run_ollama = args.only != "ollama", args.only != "vllm"
     if (run_vllm and not vllm) or (run_ollama and not ollama):
         p.error("need --vllm-url/VLLM_URL and --ollama-url/OLLAMA_URL/OLLAMA_HOST "

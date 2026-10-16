@@ -84,3 +84,44 @@ Reading these:
   length 32768 vs 8192, and the vLLM run needed `VLLM_USE_FLASHINFER_SAMPLER=0` (PyTorch
   sampler instead of FlashInfer). Cold start (`--cold-warm`) was not run: vLLM was not started
   with sleep mode.
+
+## Results: maximum context, single user
+
+Same model length on both sides: 131072 tokens (the model's maximum), one request at a time.
+
+- vLLM: `--max-model-len 131072 --max-num-seqs 1 --tensor-parallel-size 2 --gpu-memory-utilization 0.93`
+  (277,680 tokens of KV cache, so the full window fits with room to spare).
+- Ollama: tag `gemma4:e4b-it-bf16-ctx128k`, created from `gemma4:e4b-it-bf16` with
+  `PARAMETER num_ctx 131072` (`/api/create`); `/api/ps` confirms `context_length: 131072`.
+- Prompts: a filler word list of about N tokens plus a short question, unique per request
+  (random id at the start) so neither engine's prefix cache can hit. `--max-tokens 128`,
+  `temperature=0`, 2 runs (median), `bench_llm.py --context-tokens ...`. "In" is the prompt size
+  each server counted (tokenizers differ by a few tokens).
+
+| Prompt tokens in (vLLM / Ollama) | TTFT vLLM | TTFT Ollama | Decode vLLM | Decode Ollama |
+|---|---|---|---|---|
+| 3,884 / 3,900 | 1.8 s | 1.6 s | 54.5 tok/s | 33.3 tok/s |
+| 15,398 / 15,391 | 7.7 s | 4.9 s | 50.7 tok/s | 32.3 tok/s |
+| 61,422 / 61,556 | 39.8 s | 23.0 s | 45.7 tok/s | 28.6 tok/s |
+| 127,622 / 127,620 | 110.5 s | 63.2 s | 40.0 tok/s | 24.6 tok/s |
+
+Raw data: `results-ctx-vllm.json`, `results-ctx-ollama.json`.
+
+GPU memory: vLLM 11.5 + 11.3 GB (preallocated, constant). Ollama's loaded model is 11.0 GB in
+total (`/api/ps`); sampled `nvidia-smi` peaks were 7.9 GB (GPU 0) and 6.3 GB (GPU 1), sampled every
+20 s so they may undershoot.
+
+Reading these:
+
+- Both engines hold the full 131072-token window on 2x12 GB. Nothing needed quantizing.
+- **Prefill (TTFT) favours Ollama once the prompt is long**: 1.7x faster at 61k-128k tokens,
+  reversing the short-prompt result in the table above. Prefill cost grows roughly linearly on
+  both (about 0.9 ms/token on vLLM, 0.5 ms/token on Ollama).
+- **Decode favours vLLM** at every size (1.6x at 128k), and both slow down as the context grows
+  (vLLM 54.5 to 40.0 tok/s, Ollama 33.3 to 24.6).
+- Not investigated: why vLLM prefills slower here. Candidates are the attention backend (the log
+  says FlashAttention 4 is unavailable for Gemma 4's mixed head dimensions, so `TRITON_ATTN` is
+  used), tensor-parallel communication over PCIe, and the default `--max-num-batched-tokens`.
+  Tuning those could change this result.
+- Caveats as above: Ollama's output includes a thinking trace so output lengths differ (128 capped
+  vs 57); decode tok/s is still comparable. vLLM used the PyTorch sampler. Two runs per size only.
