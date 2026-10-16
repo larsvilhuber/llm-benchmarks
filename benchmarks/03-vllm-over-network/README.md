@@ -9,9 +9,10 @@ configuration on cv-ai.
    usefully? cv-ai has 2x12 GB of VRAM (CUDA); mac-studio has about 50 GB of unified memory
    (Metal). Each wins on a different axis (CUDA throughput vs memory size), so which wins
    depends on model size.
-2. **Agent backend:** can either host act as the private backend for a coding agent, i.e.
-   Claude Code pointed at it, or an open agent (e.g. opencode, aider)? Judged on whether
-   the agent works at all, whether it completes tasks, and how long it takes.
+2. **Agent backend:** can either host act as the private backend for a coding agent? Scope
+   for now is Claude Code pointed at the host, and the focus is metrics (Part 1 and the
+   measurable parts of Part 2). **Open agents such as opencode are deferred** to a later
+   round.
 
 Clients reach the hosts directly over the LAN from a workstation, which is the real
 usage. Network overhead is not isolated; record round-trip time (`ping`) once per run.
@@ -59,8 +60,8 @@ suit both hosts, while dense models above about 24 GB cannot run on cv-ai at all
 Claude Code is pointed at a host with environment variables only (no code changes):
 `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN` (any placeholder the server accepts), and
 `ANTHROPIC_MODEL` (plus the small/fast model variable, set to the same model). Open agents are
-pointed at the OpenAI-compatible base URL in their config. The exact settings used are
-recorded in this directory for each agent and host.
+pointed at the OpenAI-compatible base URL in their config (deferred). The exact settings
+used are recorded in this directory for each agent and host.
 
 ### Task suite
 
@@ -91,7 +92,8 @@ or the local model.
 2. Context-length sweep with deterministic filler prompts of N tokens, and a repeat request
    to measure prefix-cache hits.
 3. A tool-call check (send a tool schema, validate the response).
-4. New `agent_bench.py` and a `tasks/` directory with the pinned repo and checks.
+4. New `agent_bench.py` and a `tasks/` directory with the pinned repo and checks. Written
+   with a pluggable agent command so adding opencode later is a small change.
 
 ## Procedure
 
@@ -100,8 +102,8 @@ or the local model.
    calling, and note which hosts pass.
 3. Part 1: capacity sweep per model per host. Stop Ollama on cv-ai while vLLM runs (GPU
    memory; see 02).
-4. Part 2: for each host and the best model that fits it, run the task suite with Claude Code
-   and with one open agent.
+4. Part 2: for each host and the best model that fits it, run the task suite with Claude Code.
+   Open agents (opencode first) are a later round.
 5. Store raw results here; fill in the tables and a short conclusion on what each host is
    good for.
 
