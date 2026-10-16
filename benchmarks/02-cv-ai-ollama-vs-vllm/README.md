@@ -1,4 +1,4 @@
-# 02: Ollama vs vLLM on the same hardware (planned)
+# 02: Ollama vs vLLM on the same hardware
 
 Both engines run on the same host (cv-ai, 2x12 GB CUDA), one after the other, so the
 difference is the engine and not the machine.
@@ -48,4 +48,39 @@ benchmark.
 
 ## Results
 
-Not run yet.
+Run 2026-10-16 on cv-ai, one engine at a time (the other stopped / unloaded, GPUs free
+before each pass). Same prompts, `--max-tokens 256`, 3 runs (median), `temperature=0`.
+
+| | Ollama | vLLM 0.31.0 |
+|---|---|---|
+| Model | `gemma4:e4b-it-bf16` (GGUF, llama.cpp runner) | `google/gemma-4-E4B-it` (bf16 safetensors) |
+| GPU split | layers across both GPUs (automatic) | `--tensor-parallel-size 2` |
+| Context | 32768 (reported by `/api/ps`) | `--max-model-len 8192` |
+| GPU memory in use | 6.3 GB + 5.5 GB | 11.4 GB + 11.2 GB (`--gpu-memory-utilization 0.93`) |
+| Launch | default Ollama container | see [README-cuda.md](../../README-cuda.md) |
+
+| Prompt | Ollama TTFT | vLLM TTFT | Ollama tok/s | vLLM tok/s |
+|---|---|---|---|---|
+| short | 165 ms | 47 ms | 33.2 | 57.5 |
+| medium | 180 ms | 42 ms | 33.5 | 56.5 |
+| long | 179 ms | 30 ms | 33.4 | 56.5 |
+| long x4 parallel (aggregate) | 11,890 ms | 79 ms | 32.7 | 180.1 |
+
+Raw data: `results-ollama.json`, `results-vllm.json`.
+
+Reading these:
+
+- Decode is about 1.7x faster on vLLM (56-57 vs 33 tok/s) and TTFT 4-6x lower.
+- Under 4 concurrent requests vLLM batches (180 tok/s aggregate); Ollama's aggregate stays at
+  its single-stream rate, i.e. requests were served one after another (its
+  `OLLAMA_NUM_PARALLEL` was not checked; this is the observed behaviour with the container's
+  current settings).
+- **Output is not the same.** For the short prompt Ollama emits a thinking trace
+  (`reasoning` filled, `content` empty, `finish_reason: length` at 256 tokens) while vLLM
+  answers directly in 57 tokens. Total times and token counts are therefore not
+  comparable; TTFT and tok/s are. Enabling or disabling thinking identically on both would
+  fix this and is a follow-up.
+- Not like-for-like in other ways: different runners (llama.cpp vs vLLM kernels), context
+  length 32768 vs 8192, and the vLLM run needed `VLLM_USE_FLASHINFER_SAMPLER=0` (PyTorch
+  sampler instead of FlashInfer). Cold start (`--cold-warm`) was not run: vLLM was not started
+  with sleep mode.

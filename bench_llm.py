@@ -207,49 +207,63 @@ def main():
     p.add_argument("--cold-warm", action="store_true",
                    help="run a cold pass (model unloaded first), then a warm pass, then unload "
                         "(Ollama: keep_alive 0; vLLM: /sleep and /wake_up if the server has sleep mode)")
+    p.add_argument("--only", choices=["ollama", "vllm"],
+                   help="benchmark one engine only (run the engines in sequence on shared GPUs)")
     p.add_argument("--wait", type=int, default=0, help="seconds to wait for servers to come up")
     p.add_argument("--json", help="write results to this file")
     args = p.parse_args()
 
     vllm, ollama = normalize(args.vllm_url), normalize(args.ollama_url)
-    if not vllm or not ollama:
-        p.error("need --vllm-url/VLLM_URL and --ollama-url/OLLAMA_URL/OLLAMA_HOST")
+    run_vllm, run_ollama = args.only != "ollama", args.only != "vllm"
+    if (run_vllm and not vllm) or (run_ollama and not ollama):
+        p.error("need --vllm-url/VLLM_URL and --ollama-url/OLLAMA_URL/OLLAMA_HOST "
+                "(only the one selected by --only)")
 
-    if args.ssh_tunnel:
+    if run_vllm and args.ssh_tunnel:
         vllm = open_tunnel(vllm)
     deadline = time.time() + args.wait
-    models = wait_ready(vllm, deadline, "vllm")
-    vllm_model = args.vllm_model or models["data"][0]["id"]
-    wait_ready(ollama, deadline, "ollama")
+    if run_vllm:
+        models = wait_ready(vllm, deadline, "vllm")
+        vllm_model = args.vllm_model or models["data"][0]["id"]
+    if run_ollama:
+        wait_ready(ollama, deadline, "ollama")
 
     if not args.cold_warm:
-        out = {"vllm": {"warm": bench("vLLM", vllm, vllm_model, args)},
-               "ollama": {"warm": bench("Ollama", ollama, args.ollama_model, args)}}
+        out = {}
+        if run_vllm:
+            out["vllm"] = {"warm": bench("vLLM", vllm, vllm_model, args)}
+        if run_ollama:
+            out["ollama"] = {"warm": bench("Ollama", ollama, args.ollama_model, args)}
     else:
-        out = {"vllm": {}, "ollama": {}}
-        # Ollama: unload, cold pass loads the model, warm pass reuses it, then unload.
-        if not ollama_unload(ollama, args.ollama_model):
-            print("ollama: model still loaded after unload request", file=sys.stderr)
-        out["ollama"]["cold"] = bench("Ollama (cold)", ollama, args.ollama_model, args, warmup=False)
-        out["ollama"]["warm"] = bench("Ollama (warm)", ollama, args.ollama_model, args, warmup=False)
-        ollama_unload(ollama, args.ollama_model)
-        print("ollama: model unloaded", file=sys.stderr)
-        # vLLM: only a server started with sleep mode can release the model.
-        if vllm_supports_sleep(vllm):
-            vllm_sleep(vllm)
-            print(f"vllm: wake_up (reload) took {vllm_wake(vllm):.2f} s", file=sys.stderr)
-        else:
-            print("vllm: sleep mode not enabled on server; 'cold' is only the first pass on the "
-                  "running server (no weight reload). Start vLLM with --enable-sleep-mode and "
-                  "VLLM_SERVER_DEV_MODE=1 for a true cold start.", file=sys.stderr)
-        out["vllm"]["cold"] = bench("vLLM (cold)", vllm, vllm_model, args, warmup=False)
-        out["vllm"]["warm"] = bench("vLLM (warm)", vllm, vllm_model, args, warmup=False)
+        out = {}
+        if run_ollama:
+            out["ollama"] = {}
+            # Ollama: unload, cold pass loads the model, warm pass reuses it, then unload.
+            if not ollama_unload(ollama, args.ollama_model):
+                print("ollama: model still loaded after unload request", file=sys.stderr)
+            out["ollama"]["cold"] = bench("Ollama (cold)", ollama, args.ollama_model, args, warmup=False)
+            out["ollama"]["warm"] = bench("Ollama (warm)", ollama, args.ollama_model, args, warmup=False)
+            ollama_unload(ollama, args.ollama_model)
+            print("ollama: model unloaded", file=sys.stderr)
+        if run_vllm:
+            out["vllm"] = {}
+            # vLLM: only a server started with sleep mode can release the model.
+            if vllm_supports_sleep(vllm):
+                vllm_sleep(vllm)
+                print(f"vllm: wake_up (reload) took {vllm_wake(vllm):.2f} s", file=sys.stderr)
+            else:
+                print("vllm: sleep mode not enabled on server; 'cold' is only the first pass on the "
+                      "running server (no weight reload). Start vLLM with --enable-sleep-mode and "
+                      "VLLM_SERVER_DEV_MODE=1 for a true cold start.", file=sys.stderr)
+            out["vllm"]["cold"] = bench("vLLM (cold)", vllm, vllm_model, args, warmup=False)
+            out["vllm"]["warm"] = bench("vLLM (warm)", vllm, vllm_model, args, warmup=False)
 
-    for phase in out["ollama"]:
-        print(f"\n=== speedup, {phase} (vLLM vs Ollama) ===")
-        for k in out["vllm"][phase]:
-            v, o = out["vllm"][phase][k], out["ollama"][phase][k]
-            print(f"{k:<22} decode {v['tps']/o['tps']:.2f}x | TTFT {o['ttft']/v['ttft']:.2f}x faster")
+    if "vllm" in out and "ollama" in out:
+        for phase in out["ollama"]:
+            print(f"\n=== speedup, {phase} (vLLM vs Ollama) ===")
+            for k in out["vllm"][phase]:
+                v, o = out["vllm"][phase][k], out["ollama"][phase][k]
+                print(f"{k:<22} decode {v['tps']/o['tps']:.2f}x | TTFT {o['ttft']/v['ttft']:.2f}x faster")
     if args.json:
         with open(args.json, "w") as f:
             json.dump(out, f, indent=2)
