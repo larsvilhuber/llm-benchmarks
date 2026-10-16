@@ -20,7 +20,7 @@ Sampling is deterministic (`temperature=0`). Token counts come from the server's
 
 ## Prerequisites
 
-1. **vLLM** is serving the model (here: `vllm serve google/gemma-4-E4B-it --host 0.0.0.0 --port 8000` on the Apple-silicon host).
+1. **vLLM** is serving the model (here: `vllm serve google/gemma-4-E4B-it --host 0.0.0.0 --port 8000` on mac-studio).
 2. **Ollama** has a build with matching weights. vLLM serves full precision, so
    compare against the bf16 Ollama build, not the default 4-bit one:
    ```
@@ -43,7 +43,7 @@ Both URLs must be set; the script exits with an error if either is missing.
 ## Repeat run
 
 ```
-export VLLM_URL=http://<vllm-host>:8000     # OLLAMA_HOST (host:port) must also be set
+export VLLM_URL=http://mac-studio:8000     # OLLAMA_HOST (cv-ai:11434) must also be set
 ./bench_llm.py --ssh-tunnel --ollama-model gemma4:e4b-it-bf16 --wait 300 --json results.json
 ```
 

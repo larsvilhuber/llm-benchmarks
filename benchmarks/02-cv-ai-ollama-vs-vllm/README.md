@@ -1,11 +1,11 @@
 # 02: Ollama vs vLLM on the same hardware (planned)
 
-Both engines run on the same 2x12 GB CUDA host, one after the other, so the
+Both engines run on the same host (cv-ai, 2x12 GB CUDA), one after the other, so the
 difference is the engine and not the machine.
 
 ## Prerequisite (separate task)
 
-Install vLLM on the host (in a dedicated directory, e.g. a virtualenv there) and
+Install vLLM on cv-ai in `/home/vllm` (own virtualenv) and
 confirm `vllm serve` starts with the target model.
 
 ## Do the servers conflict?

@@ -7,8 +7,8 @@ streaming API, so only the stack under test differs.
 
 | # | Benchmark | Stacks compared | Status |
 |---|---|---|---|
-| 01 | [Ollama + CUDA vs vLLM + MLX](benchmarks/01-ollama-cuda-vs-vllm-mlx/) | Ollama on 2x12 GB NVIDIA GPUs vs vLLM on Apple silicon (~50 GB) | done |
-| 02 | [Ollama vs vLLM on the same hardware](benchmarks/02-cv-ai-ollama-vs-vllm/) | both on the 2x12 GB CUDA host | planned (needs vLLM installed) |
+| 01 | [Ollama + CUDA vs vLLM + MLX](benchmarks/01-ollama-cuda-vs-vllm-mlx/) | Ollama on cv-ai (2x12 GB NVIDIA GPUs) vs vLLM on mac-studio (Apple silicon, ~50 GB) | done |
+| 02 | [Ollama vs vLLM on the same hardware](benchmarks/02-cv-ai-ollama-vs-vllm/) | both on cv-ai | planned (needs vLLM installed) |
 
 Benchmark 01 differs in hardware as well as software, so it compares deployed
 setups, not engines. Benchmark 02 isolates the engine.
