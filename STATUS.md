@@ -34,6 +34,8 @@ cv-ai max-context run (131072 tokens, single user): done, results in the benchma
 `gemma4:e4b-it-bf16-ctx128k` (num_ctx 131072) was created on cv-ai for it; vLLM used
 `--max-model-len 131072 --max-num-seqs 1`. Open: vLLM prefill is slower than Ollama at long context (cause not investigated).
 
+Cold-start run on cv-ai done (vLLM with `VLLM_SERVER_DEV_MODE=1 --enable-sleep-mode`; `vllm serve` start to ready 166 s).
+
 ## Known issues
 - On the short prompt Ollama emits 256 tokens, vLLM 57. Confirmed on cv-ai: Ollama produces a thinking
   trace (`reasoning` set, `content` empty, `finish_reason: length`); vLLM does not. Totals are not

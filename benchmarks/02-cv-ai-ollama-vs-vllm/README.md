@@ -125,3 +125,36 @@ Reading these:
   Tuning those could change this result.
 - Caveats as above: Ollama's output includes a thinking trace so output lengths differ (128 capped
   vs 57); decode tok/s is still comparable. vLLM used the PyTorch sampler. Two runs per size only.
+
+## Results: cold start (131072 context, single user)
+
+`bench_llm.py --cold-warm --only <engine> --context-tokens 4096 65536 --runs 2 --max-tokens 128`.
+Same configuration as the max-context run; vLLM additionally started with
+`VLLM_SERVER_DEV_MODE=1 ... --enable-sleep-mode`. The cold pass is the first request after the
+model was released; the warm pass repeats it with the model resident.
+
+| | vLLM | Ollama |
+|---|---|---|
+| How the model was released | `/sleep` (weights offloaded to host RAM, KV cache freed) | `keep_alive: 0` (unloaded, `/api/ps` empty) |
+| Reload | `/wake_up` took 3.5 s | included in first request |
+| First request, 3.9k tokens: TTFT cold | 2.8 s | 12.4 s |
+| First request, 3.9k tokens: TTFT warm | 1.8 s | 2.3 s |
+| Cold extra over warm | ~1.0 s (+3.5 s wake_up) | ~10.2 s |
+| 61k-token request, TTFT cold / warm | 40.3 s / 40.1 s | 22.4 s / 22.6 s |
+| Decode cold / warm (3.9k) | 59.6 / 54.6 tok/s | 33.2 / 33.2 tok/s |
+
+Process start to `Application startup complete` for `vllm serve` (131072 context, TP=2,
+weights already in the OS page cache, torch.compile cache already populated): **166 s**.
+
+Raw data: `results-cold-warm-vllm.json`, `results-cold-warm-ollama.json`.
+
+Reading these:
+
+- Reloading is much cheaper on vLLM when it uses sleep mode (3.5 s plus ~1 s of first-request
+  warmup), but only because the weights stay in host RAM. A real restart of the server is 166 s,
+  versus roughly 10 s for Ollama to load the model on first use.
+- After the first request the pattern from the max-context run holds: Ollama prefills the 61k
+  prompt about 1.8x faster, vLLM decodes about 1.6x faster.
+- Caveats: this is not disk-cold. Both engines read weights from the OS page cache (dropping caches
+  needs root and was not done). Sleep mode keeps ~15 GB of weights in host RAM, so it is not free.
+  The 166 s start time is a single measurement.
