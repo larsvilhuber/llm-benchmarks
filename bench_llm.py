@@ -39,13 +39,16 @@ WORDS = ("river stone market lantern copper winter orbit ledger meadow signal ha
          "horizon barley mirror cinder voyage timber puzzle velvet glacier harvest").split()
 
 
+def filler(n_tokens, rng):
+    """Random word list of roughly n_tokens (~1.1 tokens per word); actual count is reported."""
+    return " ".join(rng.choice(WORDS) for _ in range(int(n_tokens / 1.1)))
+
+
 def context_prompt(n_tokens):
     """Filler document of roughly n_tokens, unique per call so prefix caches cannot hit."""
     rng = random.Random()
     nonce = f"{rng.getrandbits(64):016x}"
-    words = int(n_tokens / 1.1)  # ~1.1 tokens per word with these words; actual count is reported
-    body = " ".join(rng.choice(WORDS) for _ in range(words))
-    return (f"Document id {nonce}.\n{body}\n\n"
+    return (f"Document id {nonce}.\n{filler(n_tokens, rng)}\n\n"
             "Ignore the word list above. In two sentences, explain what a hash table is.")
 
 
@@ -99,15 +102,19 @@ def wait_ready(base, deadline, label):
             time.sleep(15)
 
 
-def stream_chat(base, model, prompt, max_tokens, timeout=600):
-    """One streaming request. Returns dict of timings and token counts."""
+def stream_chat(base, model, prompt, max_tokens, timeout=600, extra=None):
+    """One streaming request (prompt: a string or a message list).
+
+    Returns dict of timings, token counts, cached prompt tokens and the answer text."""
+    messages = prompt if isinstance(prompt, list) else [{"role": "user", "content": prompt}]
     body = json.dumps({
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "max_tokens": max_tokens,
         "temperature": 0,
         "stream": True,
         "stream_options": {"include_usage": True},
+        **(extra or {}),
     }).encode()
     req = urllib.request.Request(base + "/v1/chat/completions", body,
                                  {"Content-Type": "application/json"})
@@ -115,6 +122,7 @@ def stream_chat(base, model, prompt, max_tokens, timeout=600):
     first = None
     chunks = 0
     usage = {}
+    text = []
     with urllib.request.urlopen(req, timeout=timeout) as r:
         for raw in r:
             line = raw.decode().strip()
@@ -128,6 +136,7 @@ def stream_chat(base, model, prompt, max_tokens, timeout=600):
                 usage = obj["usage"]
             for ch in obj.get("choices", []):
                 d = ch.get("delta", {})
+                text.append(d.get("content") or "")
                 # thinking models may emit reasoning separately from content
                 if d.get("content") or d.get("reasoning") or d.get("reasoning_content"):
                     chunks += 1
@@ -142,7 +151,9 @@ def stream_chat(base, model, prompt, max_tokens, timeout=600):
         "ttft": first - t0,
         "total": t1 - t0,
         "prompt_tokens": usage.get("prompt_tokens"),
+        "cached_tokens": (usage.get("prompt_tokens_details") or {}).get("cached_tokens"),
         "out_tokens": out_tokens,
+        "text": "".join(text),
         "tps": out_tokens / decode_time if decode_time > 0 and out_tokens > 1 else float("nan"),
     }
 
@@ -205,6 +216,41 @@ def bench(label, base, model, args, warmup=True):
     return results
 
 
+def agent_session(label, base, model, args):
+    """Multi-turn session shaped like a coding agent: a large fixed system prompt (instructions and
+    tool definitions), then turns that each append a tool output and get a short answer. The full
+    history is resent every turn, so a prefix cache can reuse everything but the new tokens.
+    The session is unique (random id first), so it never hits cache from an earlier session."""
+    print(f"\n=== {label} agent session: {base}  model={model} ===")
+    rng = random.Random()
+    extra = {"reasoning_effort": "none"} if args.no_think else None
+    system = (f"Session {rng.getrandbits(64):016x}. You are a coding agent. Reference material "
+              f"follows.\n{filler(args.agent_prefix, rng)}")
+    msgs = [{"role": "system", "content": system}]
+    turns, t0 = [], time.perf_counter()
+    for i in range(1, args.agent_turns + 1):
+        msgs.append({"role": "user", "content":
+                     f"Tool output for step {i}:\n{filler(args.agent_step, rng)}\n\n"
+                     f"Step {i}: in one sentence, say what you would do next."})
+        r = stream_chat(base, model, msgs, args.max_tokens, timeout=1800, extra=extra)
+        msgs.append({"role": "assistant", "content": r.pop("text")})
+        turns.append(r)
+        cached = "n/a" if r["cached_tokens"] is None else f"{r['cached_tokens']:>6}"
+        print(f"turn {i:>2}  {r['prompt_tokens']:>6} in, {cached} cached | TTFT {r['ttft']*1000:7.0f} ms | "
+              f"{r['tps']:5.1f} tok/s | {r['out_tokens']:>3} out | total {r['total']:6.2f} s")
+        if args.agent_interleave and i < args.agent_turns:
+            # another user's unrelated request between turns (e.g. a chat in Open WebUI)
+            stream_chat(base, model, context_prompt(args.agent_interleave), 32, extra=extra)
+    wall = time.perf_counter() - t0
+    later = turns[1:] or turns
+    med = lambda k: statistics.median(t[k] for t in later)
+    s = {"turns": turns, "session_s": sum(t["total"] for t in turns), "wall_s": wall,
+         "first_ttft": turns[0]["ttft"], "later_ttft_median": med("ttft"), "later_tps_median": med("tps")}
+    print(f"session: {s['session_s']:.1f} s in requests | turn 1 TTFT {s['first_ttft']:.2f} s | "
+          f"turns 2+: median TTFT {s['later_ttft_median']:.2f} s, median {s['later_tps_median']:.1f} tok/s")
+    return s
+
+
 def summarize(name, runs, note):
     med = lambda k: statistics.median(r[k] for r in runs)
     s = {"first_ttft": runs[0]["ttft"], "ttft": med("ttft"), "tps": med("tps"), "total": med("total"), "out_tokens": med("out_tokens"),
@@ -233,6 +279,17 @@ def main():
     p.add_argument("--cold-warm", action="store_true",
                    help="run a cold pass (model unloaded first), then a warm pass, then unload "
                         "(Ollama: keep_alive 0; vLLM: /sleep and /wake_up if the server has sleep mode)")
+    p.add_argument("--agent-turns", type=int, metavar="N",
+                   help="run an N-turn coding-agent-shaped session instead of the prompt benchmark")
+    p.add_argument("--agent-prefix", type=int, default=15000, metavar="TOKENS",
+                   help="agent mode: size of the fixed system prompt")
+    p.add_argument("--agent-step", type=int, default=1500, metavar="TOKENS",
+                   help="agent mode: tokens of tool output appended each turn")
+    p.add_argument("--agent-interleave", type=int, default=0, metavar="TOKENS",
+                   help="agent mode: between turns send an unrelated request of this many tokens "
+                        "(another user on the same server); 0 = off")
+    p.add_argument("--no-think", action="store_true",
+                   help="send reasoning_effort=none (disables thinking on Ollama; vLLM's Gemma 4 default)")
     p.add_argument("--only", choices=["ollama", "vllm"],
                    help="benchmark one engine only (run the engines in sequence on shared GPUs)")
     p.add_argument("--wait", type=int, default=0, help="seconds to wait for servers to come up")
@@ -256,7 +313,13 @@ def main():
     if run_ollama:
         wait_ready(ollama, deadline, "ollama")
 
-    if not args.cold_warm:
+    if args.agent_turns:
+        out = {}
+        if run_vllm:
+            out["vllm"] = {"agent": agent_session("vLLM", vllm, vllm_model, args)}
+        if run_ollama:
+            out["ollama"] = {"agent": agent_session("Ollama", ollama, args.ollama_model, args)}
+    elif not args.cold_warm:
         out = {}
         if run_vllm:
             out["vllm"] = {"warm": bench("vLLM", vllm, vllm_model, args)}
@@ -288,6 +351,8 @@ def main():
 
     if "vllm" in out and "ollama" in out:
         for phase in out["ollama"]:
+            if phase == "agent":
+                continue
             print(f"\n=== speedup, {phase} (vLLM vs Ollama) ===")
             for k in out["vllm"][phase]:
                 v, o = out["vllm"][phase][k], out["ollama"][phase][k]

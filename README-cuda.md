@@ -49,6 +49,11 @@ That starts with the same `--gpu-memory-utilization 0.93` and reports 277,680 to
 (Gemma 4's sliding-window layers keep the cache small), about 11.5 + 11.3 GB used. A 127k-token
 prompt completes in ~110 s (prefill) and decodes at ~40 tok/s.
 
+For a coding agent (OpenCode etc.) add tool calling, or the server never returns `tool_calls`:
+`--enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4`
+(optionally `--enable-prompt-tokens-details` to see cached prompt tokens in `usage`). Check it with
+`./tool_check.py --url http://127.0.0.1:8000`. Prefix caching is on by default.
+
 For a cold-start test add `--enable-sleep-mode` and `export VLLM_SERVER_DEV_MODE=1`; then
 `curl -X POST localhost:8000/sleep` frees the GPU memory (weights go to host RAM, ~15 GB) and
 `curl -X POST localhost:8000/wake_up` reloads in ~3.5 s. A full server start is ~166 s.

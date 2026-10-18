@@ -1,0 +1,173 @@
+{
+  "vllm": {
+    "agent": {
+      "turns": [
+        {
+          "ttft": 8.368466351996176,
+          "total": 8.778927539999131,
+          "prompt_tokens": 16447,
+          "cached_tokens": 0,
+          "out_tokens": 22,
+          "tps": 53.59824666258484
+        },
+        {
+          "ttft": 1.4611544589861296,
+          "total": 1.9601006239827257,
+          "prompt_tokens": 18861,
+          "cached_tokens": 16416,
+          "out_tokens": 26,
+          "tps": 52.10983032643888
+        },
+        {
+          "ttft": 1.491535198991187,
+          "total": 1.9531499059812631,
+          "prompt_tokens": 21260,
+          "cached_tokens": 18848,
+          "out_tokens": 24,
+          "tps": 51.99141109799162
+        },
+        {
+          "ttft": 1.5191527889983263,
+          "total": 2.0016006439982448,
+          "prompt_tokens": 23636,
+          "cached_tokens": 21248,
+          "out_tokens": 25,
+          "tps": 51.81907172124171
+        },
+        {
+          "ttft": 1.576762642012909,
+          "total": 2.0611857360054273,
+          "prompt_tokens": 26042,
+          "cached_tokens": 23616,
+          "out_tokens": 25,
+          "tps": 51.60777904693808
+        },
+        {
+          "ttft": 1.6155419969873037,
+          "total": 2.1022990979836322,
+          "prompt_tokens": 28441,
+          "cached_tokens": 26016,
+          "out_tokens": 25,
+          "tps": 51.360319035568764
+        },
+        {
+          "ttft": 1.6639828649931587,
+          "total": 2.1496608669986017,
+          "prompt_tokens": 30835,
+          "cached_tokens": 28416,
+          "out_tokens": 25,
+          "tps": 51.474433465734414
+        },
+        {
+          "ttft": 1.7073888129962143,
+          "total": 2.1919918670027982,
+          "prompt_tokens": 33241,
+          "cached_tokens": 30816,
+          "out_tokens": 25,
+          "tps": 51.5886142138517
+        },
+        {
+          "ttft": 1.7856021260085981,
+          "total": 2.2727691440086346,
+          "prompt_tokens": 35658,
+          "cached_tokens": 33216,
+          "out_tokens": 25,
+          "tps": 51.3171029160232
+        },
+        {
+          "ttft": 1.8042663770029321,
+          "total": 2.296903120004572,
+          "prompt_tokens": 38072,
+          "cached_tokens": 35648,
+          "out_tokens": 25,
+          "tps": 50.747331284456756
+        },
+        {
+          "ttft": 1.8514559579780325,
+          "total": 2.345429257984506,
+          "prompt_tokens": 40478,
+          "cached_tokens": 38048,
+          "out_tokens": 25,
+          "tps": 50.61002284874988
+        },
+        {
+          "ttft": 1.9141531100030988,
+          "total": 2.409511186007876,
+          "prompt_tokens": 42893,
+          "cached_tokens": 40448,
+          "out_tokens": 25,
+          "tps": 50.46854227477843
+        },
+        {
+          "ttft": 1.9439166779920924,
+          "total": 2.439541272004135,
+          "prompt_tokens": 45291,
+          "cached_tokens": 42880,
+          "out_tokens": 25,
+          "tps": 50.4414032355153
+        },
+        {
+          "ttft": 1.978843623015564,
+          "total": 2.478965322021395,
+          "prompt_tokens": 47698,
+          "cached_tokens": 45280,
+          "out_tokens": 25,
+          "tps": 49.9878330608257
+        },
+        {
+          "ttft": 2.032729695987655,
+          "total": 2.5352723999822047,
+          "prompt_tokens": 50111,
+          "cached_tokens": 47680,
+          "out_tokens": 25,
+          "tps": 49.747016126755135
+        },
+        {
+          "ttft": 2.0697436800110154,
+          "total": 2.5752764049975667,
+          "prompt_tokens": 52505,
+          "cached_tokens": 50080,
+          "out_tokens": 25,
+          "tps": 49.452782706925795
+        },
+        {
+          "ttft": 2.1181410790013615,
+          "total": 2.625304657005472,
+          "prompt_tokens": 54911,
+          "cached_tokens": 52480,
+          "out_tokens": 25,
+          "tps": 49.29376060162856
+        },
+        {
+          "ttft": 2.162887904996751,
+          "total": 2.6699344940134324,
+          "prompt_tokens": 57307,
+          "cached_tokens": 54880,
+          "out_tokens": 25,
+          "tps": 49.30513396901584
+        },
+        {
+          "ttft": 2.210375602997374,
+          "total": 2.7210393459827174,
+          "prompt_tokens": 59708,
+          "cached_tokens": 57280,
+          "out_tokens": 25,
+          "tps": 48.95589386050758
+        },
+        {
+          "ttft": 2.248201209004037,
+          "total": 2.756270179990679,
+          "prompt_tokens": 62111,
+          "cached_tokens": 59680,
+          "out_tokens": 25,
+          "tps": 49.205917754535136
+        }
+      ],
+      "session_s": 53.325133065955015,
+      "wall_s": 53.34822980800527,
+      "first_ttft": 8.368466351996176,
+      "later_ttft_median": 1.8514559579780325,
+      "later_tps_median": 50.61002284874988
+    }
+  }
+}

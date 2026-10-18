@@ -36,6 +36,11 @@ cv-ai max-context run (131072 tokens, single user): done, results in the benchma
 
 Cold-start run on cv-ai done (vLLM with `VLLM_SERVER_DEV_MODE=1 --enable-sleep-mode`; `vllm serve` start to ready 166 s).
 
+Coding-agent run on cv-ai done: `tool_check.py` passes on both engines (vLLM needs
+`--enable-auto-tool-choice --tool-call-parser gemma4`); 20-turn cached session takes the same time on both
+with short answers, vLLM ahead when answers are longer (decode 1.7x). Not done: a real OpenCode session,
+a larger coding model (e.g. qwen3-coder:30b, 4-bit on vLLM).
+
 ## Known issues
 - On the short prompt Ollama emits 256 tokens, vLLM 57. Confirmed on cv-ai: Ollama produces a thinking
   trace (`reasoning` set, `content` empty, `finish_reason: length`); vLLM does not. Totals are not

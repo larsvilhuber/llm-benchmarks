@@ -158,3 +158,64 @@ Reading these:
 - Caveats: this is not disk-cold. Both engines read weights from the OS page cache (dropping caches
   needs root and was not done). Sleep mode keeps ~15 GB of weights in host RAM, so it is not free.
   The 166 s start time is a single measurement.
+
+## Results: coding-agent workload (OpenCode-like), single user
+
+### Tool calling
+
+`./tool_check.py --url <server>` checks what an agent needs from the OpenAI-compatible API, at
+temperature 0: (1) a tool call with correct arguments, (2) a round trip where the tool result is sent
+back and used, (3) the same tool call streamed, with argument deltas reassembling to valid JSON,
+(4) choosing the right one of two tools.
+
+| | vLLM | Ollama |
+|---|---|---|
+| Server setup | `--enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4` | none (model reports `tools` capability) |
+| 1. single call | pass | pass |
+| 2. round trip | pass | pass |
+| 3. streaming | pass | pass |
+| 4. tool choice | pass | pass |
+
+Without `--enable-auto-tool-choice --tool-call-parser gemma4`, vLLM does not return `tool_calls`, so
+an agent cannot use it. This is a small check, not a measure of agent quality.
+
+### Multi-turn session with prefix caching
+
+`bench_llm.py --agent-turns 20 --agent-prefix 15000 --agent-step 2500 --max-tokens 256 --no-think`:
+a 15k-token system prompt (like an agent's instructions and tool definitions), then 20 turns that
+each append ~2.4k tokens of "tool output" and get a one-sentence answer; the whole history is resent
+every turn, as agents do, growing to ~62k tokens. Each session starts with a random id, so it cannot
+reuse cache from an earlier session. `--no-think` sends `reasoning_effort: "none"`, which turns off
+Ollama's thinking trace (vLLM's Gemma 4 default is already off), so both produce short answers
+(20-25 tokens). `--agent-interleave 2000` additionally sends an unrelated 2k-token request between
+turns, like another user chatting through Open WebUI on the same server.
+Same 131072-context servers as above; vLLM also with `--enable-prompt-tokens-details` to report
+cached tokens.
+
+| | vLLM | Ollama | vLLM, + other user | Ollama, + other user |
+|---|---|---|---|---|
+| Turn 1 TTFT (16.4k tokens, nothing cached) | 8.4 s | 4.9 s | 8.3 s | 6.1 s |
+| Turns 2-20: tokens reused from cache | all but the new ~2.4k | all but the new ~2.4k | same | same |
+| Turns 2-20: TTFT (turn 2 to turn 20) | 1.46 to 2.25 s | 1.26 to 2.32 s | 1.44 to 2.23 s | 1.38 to 2.74 s |
+| Turns 2-20: median TTFT | 1.85 s | 1.84 s | 1.84 s | 2.10 s |
+| Turns 2-20: median decode | 50.6 tok/s | 30.4 tok/s | 51.9 tok/s | 30.4 tok/s |
+| **Whole session (sum of 20 requests)** | **53.3 s** | **54.1 s** | **51.1 s** | **58.4 s** |
+
+Raw data: `results-agent-{vllm,ollama}.json`, `results-agent-interleave-{vllm,ollama}.json`.
+
+Reading these:
+
+- With caching, the long-prompt prefill gap mostly disappears: after turn 1 both engines only
+  process the new tokens, and per-turn TTFT is the same (~1.85 s median, rising with history length
+  on both). Ollama's faster prefill only shows on turn 1 (4.9 vs 8.4 s).
+- With one-sentence answers the sessions take the same time (53 vs 54 s). The engines then differ
+  only by decode speed, 1.7x in vLLM's favour, which matters in proportion to how much the agent
+  writes per turn. Extrapolating from these medians (not measured): a turn that writes a
+  500-token edit at ~60k context costs about 2.2 + 10 = 12 s on vLLM and 2.3 + 16.5 = 19 s on Ollama.
+- Another user on the same server did **not** evict Ollama's cache for the agent (it still reused
+  ~59k tokens per turn); it cost ~0.26 s per turn (14%) and grew with history (+0.4 s by turn 20).
+  vLLM was unaffected. Only one interleaving pattern was tested (one 2k request between turns,
+  never two conversations at once).
+- Not covered: real OpenCode traffic (its actual prompts, parallel subagent calls), answers
+  longer than a sentence, and agent quality, which with a 4B-active-parameter model is likely
+  the real limit.
