@@ -1,0 +1,3 @@
+{"id": "explain",
+ "prompt": "Without changing any files: which function in this repository raises InsufficientStockError, and what is the default reorder threshold? Answer in one or two sentences naming the function and the number.",
+ "check": {"answer_contains": ["remove_stock", "15"]}}
