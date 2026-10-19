@@ -59,4 +59,6 @@ timed out at 400 s after 10 tool calls. Not yet run against vLLM on either host 
 Gotchas found: OpenCode takes its directory from `$PWD`, not the process cwd, so a harness must set
 `PWD` (done in `agent_bench.py`). Ollama here serves one request at a time, so a killed agent run can
 leave a generation running that delays the next run; mind this when other agents use cv-ai.
-Next: 5 runs per task on each target, a larger coding model (e.g. qwen3-coder), and vLLM on both hosts.
+Full run with `gemma4:26b-a4b-it-qat` at 128k context on cv-ai's Ollama: 11/12 passed (3 runs per task),
+median 38-64 s per task; see `benchmarks/03-vllm-over-network/RESULTS-opencode.md`.
+Next: the same suite on vLLM on both hosts (same model family), and more runs per task.

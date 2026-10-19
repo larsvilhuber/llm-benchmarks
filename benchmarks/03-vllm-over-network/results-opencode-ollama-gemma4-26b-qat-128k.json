@@ -1,0 +1,248 @@
+{
+  "agent": "opencode",
+  "targets": [
+    {
+      "name": "ollama-26b-qat",
+      "url": "http://cv-ai:11434",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k"
+    }
+  ],
+  "runs": [
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "explain",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 38.37320675095543,
+      "steps": 4,
+      "tool_calls": 3,
+      "tools": {
+        "grep": 1,
+        "read": 2
+      },
+      "tokens_in": 43641,
+      "tokens_out": 188
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "explain",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 42.821325740078464,
+      "steps": 5,
+      "tool_calls": 4,
+      "tools": {
+        "grep": 2,
+        "read": 2
+      },
+      "tokens_in": 54733,
+      "tokens_out": 368
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "explain",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 32.72740544890985,
+      "steps": 4,
+      "tool_calls": 3,
+      "tools": {
+        "grep": 1,
+        "read": 2
+      },
+      "tokens_in": 43641,
+      "tokens_out": 447
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "fix-bug",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 54.43679497088306,
+      "steps": 6,
+      "tool_calls": 5,
+      "tools": {
+        "bash": 2,
+        "glob": 1,
+        "read": 1,
+        "edit": 1
+      },
+      "tokens_in": 67649,
+      "tokens_out": 2707
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "fix-bug",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 46.14965693582781,
+      "steps": 6,
+      "tool_calls": 5,
+      "tools": {
+        "bash": 2,
+        "glob": 1,
+        "read": 1,
+        "edit": 1
+      },
+      "tokens_in": 67656,
+      "tokens_out": 1908
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "fix-bug",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 41.40535432496108,
+      "steps": 6,
+      "tool_calls": 5,
+      "tools": {
+        "bash": 2,
+        "grep": 1,
+        "read": 1,
+        "edit": 1
+      },
+      "tokens_in": 67257,
+      "tokens_out": 1712
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "implement",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 48.18314710306004,
+      "steps": 7,
+      "tool_calls": 6,
+      "tools": {
+        "glob": 2,
+        "read": 1,
+        "bash": 2,
+        "edit": 1
+      },
+      "tokens_in": 80551,
+      "tokens_out": 1486
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "implement",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 35.20217894902453,
+      "steps": 7,
+      "tool_calls": 6,
+      "tools": {
+        "glob": 2,
+        "read": 2,
+        "edit": 1,
+        "bash": 1
+      },
+      "tokens_in": 78954,
+      "tokens_out": 922
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "implement",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 48.15617927303538,
+      "steps": 6,
+      "tool_calls": 5,
+      "tools": {
+        "glob": 1,
+        "read": 2,
+        "edit": 1,
+        "bash": 1
+      },
+      "tokens_in": 67888,
+      "tokens_out": 2131
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "refactor",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 64.12841037707403,
+      "steps": 15,
+      "tool_calls": 14,
+      "tools": {
+        "glob": 1,
+        "read": 3,
+        "grep": 3,
+        "todowrite": 2,
+        "edit": 4,
+        "bash": 1
+      },
+      "tokens_in": 175511,
+      "tokens_out": 2412
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "refactor",
+      "run": 1,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 62.503048344980925,
+      "steps": 8,
+      "tool_calls": 7,
+      "tools": {
+        "glob": 2,
+        "read": 3,
+        "grep": 1,
+        "edit": 1
+      },
+      "tokens_in": 88119,
+      "tokens_out": 1408
+    },
+    {
+      "target": "ollama-26b-qat",
+      "model": "gemma4:26b-a4b-it-qat-ctx128k",
+      "task": "refactor",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 90.92796076904051,
+      "steps": 11,
+      "tool_calls": 10,
+      "tools": {
+        "grep": 2,
+        "read": 3,
+        "edit": 4,
+        "bash": 1
+      },
+      "tokens_in": 125346,
+      "tokens_out": 1302
+    }
+  ]
+}
