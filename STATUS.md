@@ -45,3 +45,18 @@ a larger coding model (e.g. qwen3-coder:30b, 4-bit on vLLM).
 - On the short prompt Ollama emits 256 tokens, vLLM 57. Confirmed on cv-ai: Ollama produces a thinking
   trace (`reasoning` set, `content` empty, `finish_reason: length`); vLLM does not. Totals are not
   comparable; TTFT and tok/s are. Follow-up: make thinking consistent on both sides.
+
+## OpenCode workflow (branch `opencode-workflow`, stacked on PR #1)
+
+`agent_bench.py` + `tasks/` run a real OpenCode session against any OpenAI-compatible server and
+judge it by outcome (see "Coding-agent workflow" in `TOOL.md`). Validated once against Ollama on cv-ai
+(`gemma4:e4b-it-bf16-ctx128k`, 1 run per task, smoke test only,
+`benchmarks/03-vllm-over-network/results-opencode-ollama-smoke.json`): implement passed (87 s);
+explain failed (wrong answer); refactor failed (stopped after one step with no tool calls); fix-bug
+timed out at 400 s after 10 tool calls. Not yet run against vLLM on either host (cv-ai's vLLM binds
+127.0.0.1; mac-studio's was not answering).
+
+Gotchas found: OpenCode takes its directory from `$PWD`, not the process cwd, so a harness must set
+`PWD` (done in `agent_bench.py`). Ollama here serves one request at a time, so a killed agent run can
+leave a generation running that delays the next run; mind this when other agents use cv-ai.
+Next: 5 runs per task on each target, a larger coding model (e.g. qwen3-coder), and vLLM on both hosts.
