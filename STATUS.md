@@ -1,5 +1,7 @@
 # Status and handoff
 
+Consolidated results: [FINDINGS.md](FINDINGS.md). Keep it current when a benchmark adds results.
+
 Shared between the agents working on this repo. Update your section when you finish a
 step or hand something over. Pull before you start; work on your own branch; keep edits
 to your own files. Do not fork `bench_llm.py`: propose changes to it in a small PR.
@@ -37,7 +39,7 @@ mac-studio values: vllm-metal 0.31.0;
 (4-bit MLX QAT, text only). `tool_check.py` 4/4 pass. Other machines cannot connect directly (managed
 macOS firewall blocks incoming connections to the Python that runs vLLM and cannot be changed), so
 clients use `ssh -N -4 -L 127.0.0.1:8000:localhost:8000 <user>@192.168.1.13` and then
-`http://127.0.0.1:8000/v1`. OpenCode suite on this server: run started by the coordinator, results pending.
+`http://127.0.0.1:8000/v1`. OpenCode suite on this server: done, 8/12 (see `benchmarks/03-vllm-over-network/RESULTS-opencode.md`).
 
 cv-ai max-context run (131072 tokens, single user): done, results in the benchmark 02 README. Ollama tag
 `gemma4:e4b-it-bf16-ctx128k` (num_ctx 131072) was created on cv-ai for it; vLLM used
@@ -70,7 +72,11 @@ Gotchas found: OpenCode takes its directory from `$PWD`, not the process cwd, so
 leave a generation running that delays the next run; mind this when other agents use cv-ai.
 Full run with `gemma4:26b-a4b-it-qat` at 128k context on cv-ai's Ollama: 11/12 passed (3 runs per task),
 median 38-64 s per task; see `benchmarks/03-vllm-over-network/RESULTS-opencode.md`.
-Next: the same suite on vLLM on both hosts (same model family), and more runs per task.
 cv-ai vLLM for that run (2026-10-25): `cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4` (W4A16, rev 7637300) at
 `http://cv-ai:8000/v1`, max-model-len 131072, TP=2, `--language-model-only`, tool_check 4/4; launch command in
 `README-cuda.md`.
+
+OpenCode on vLLM, same model family (Gemma 4 26B-A4B QAT 4-bit), 2026-10-25: cv-ai vLLM 8/12 (median passing run
+16 s), mac-studio vLLM 8/12 (42 s), versus Ollama on cv-ai 11/12 (46 s). Both vLLM servers fail the same way (empty
+turns, edit loops); cause not yet found. See `benchmarks/03-vllm-over-network/RESULTS-opencode.md`. Open: start
+mac-studio vLLM with `--enable-prompt-tokens-details` so cache hits are visible.

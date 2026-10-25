@@ -1,7 +1,7 @@
-# 03: Large models and coding-agent backends, cv-ai vs mac-studio (planned)
+# 03: Large models and coding-agent backends, cv-ai vs mac-studio
 
-**Blocked until benchmark 02 finishes.** It reuses 02's vLLM install and launch
-configuration on cv-ai.
+Status: the OpenCode runs of Part 2 are done ([RESULTS-opencode.md](RESULTS-opencode.md)).
+Part 1 (capacity) and Claude Code as the agent are still to do. This page is the original plan.
 
 ## Questions
 
@@ -11,8 +11,8 @@ configuration on cv-ai.
    depends on model size.
 2. **Agent backend:** can either host act as the private backend for a coding agent? Scope
    for now is Claude Code pointed at the host, and the focus is metrics (Part 1 and the
-   measurable parts of Part 2). **Open agents such as opencode are deferred** to a later
-   round.
+   measurable parts of Part 2). OpenCode, first planned for a later round, was run first;
+   Claude Code is still to do.
 
 Clients reach the hosts directly over the LAN from a workstation, which is the real
 usage. Network overhead is not isolated; record round-trip time (`ping`) once per run.
@@ -109,4 +109,6 @@ or the local model.
 
 ## Results
 
-Not run yet.
+- Part 2, OpenCode on three backends: [RESULTS-opencode.md](RESULTS-opencode.md); summary in
+  [FINDINGS.md](../../FINDINGS.md).
+- Part 1 and Claude Code: not run yet.

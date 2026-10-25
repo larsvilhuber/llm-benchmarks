@@ -1,0 +1,243 @@
+{
+  "agent": "opencode",
+  "targets": [
+    {
+      "name": "vllm-cv",
+      "url": "http://cv-ai:8000",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4"
+    }
+  ],
+  "runs": [
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "explain",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 10.784021686002234,
+      "steps": 4,
+      "tool_calls": 3,
+      "tools": {
+        "grep": 2,
+        "read": 1
+      },
+      "tokens_in": 45038,
+      "tokens_out": 128
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "explain",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 11.900804631000938,
+      "steps": 5,
+      "tool_calls": 4,
+      "tools": {
+        "glob": 1,
+        "grep": 1,
+        "read": 2
+      },
+      "tokens_in": 57131,
+      "tokens_out": 182
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "explain",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 10.326491309999255,
+      "steps": 4,
+      "tool_calls": 3,
+      "tools": {
+        "grep": 1,
+        "read": 2
+      },
+      "tokens_in": 45032,
+      "tokens_out": 168
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "fix-bug",
+      "run": 0,
+      "passed": false,
+      "reason": "timed out",
+      "timed_out": true,
+      "wall": 900.0628960670001,
+      "steps": 242,
+      "tool_calls": 242,
+      "tools": {
+        "bash": 1,
+        "glob": 1,
+        "read": 2,
+        "edit": 238
+      },
+      "tokens_in": 10404473,
+      "tokens_out": 55425
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "fix-bug",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 25.884600124001736,
+      "steps": 10,
+      "tool_calls": 9,
+      "tools": {
+        "bash": 2,
+        "glob": 1,
+        "read": 2,
+        "edit": 4
+      },
+      "tokens_in": 122335,
+      "tokens_out": 1201
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "fix-bug",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 13.943614896998042,
+      "steps": 6,
+      "tool_calls": 5,
+      "tools": {
+        "bash": 2,
+        "glob": 1,
+        "read": 1,
+        "edit": 1
+      },
+      "tokens_in": 70065,
+      "tokens_out": 398
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "implement",
+      "run": 0,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 8.960202190999553,
+      "steps": 3,
+      "tool_calls": 2,
+      "tools": {
+        "glob": 1,
+        "read": 1
+      },
+      "tokens_in": 33162,
+      "tokens_out": 79
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "implement",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 18.901895947998128,
+      "steps": 7,
+      "tool_calls": 6,
+      "tools": {
+        "glob": 1,
+        "read": 2,
+        "bash": 2,
+        "edit": 1
+      },
+      "tokens_in": 85274,
+      "tokens_out": 726
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "implement",
+      "run": 2,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 9.671309663997818,
+      "steps": 3,
+      "tool_calls": 2,
+      "tools": {
+        "glob": 1,
+        "read": 1
+      },
+      "tokens_in": 33162,
+      "tokens_out": 79
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "refactor",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 22.164418927000952,
+      "steps": 10,
+      "tool_calls": 9,
+      "tools": {
+        "glob": 1,
+        "read": 1,
+        "grep": 2,
+        "edit": 4,
+        "bash": 1
+      },
+      "tokens_in": 116499,
+      "tokens_out": 596
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "refactor",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 20.213171824998426,
+      "steps": 11,
+      "tool_calls": 10,
+      "tools": {
+        "glob": 1,
+        "read": 1,
+        "grep": 3,
+        "edit": 4,
+        "bash": 1
+      },
+      "tokens_in": 127566,
+      "tokens_out": 444
+    },
+    {
+      "target": "vllm-cv",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "task": "refactor",
+      "run": 2,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 14.689938372001052,
+      "steps": 3,
+      "tool_calls": 2,
+      "tools": {
+        "todowrite": 1,
+        "read": 1
+      },
+      "tokens_in": 33471,
+      "tokens_out": 143
+    }
+  ]
+}

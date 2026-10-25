@@ -1,0 +1,243 @@
+{
+  "agent": "opencode",
+  "targets": [
+    {
+      "name": "vllm-mac",
+      "url": "http://127.0.0.1:8000",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit"
+    }
+  ],
+  "runs": [
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "explain",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 40.64001405399904,
+      "steps": 5,
+      "tool_calls": 4,
+      "tools": {
+        "glob": 1,
+        "grep": 1,
+        "read": 2
+      },
+      "tokens_in": 57106,
+      "tokens_out": 186
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "explain",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 37.27594785799738,
+      "steps": 4,
+      "tool_calls": 3,
+      "tools": {
+        "grep": 1,
+        "read": 2
+      },
+      "tokens_in": 45012,
+      "tokens_out": 168
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "explain",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 35.07684573300139,
+      "steps": 4,
+      "tool_calls": 3,
+      "tools": {
+        "grep": 2,
+        "read": 1
+      },
+      "tokens_in": 45018,
+      "tokens_out": 128
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "fix-bug",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 42.655995901001006,
+      "steps": 10,
+      "tool_calls": 9,
+      "tools": {
+        "bash": 4,
+        "glob": 1,
+        "read": 2,
+        "edit": 2
+      },
+      "tokens_in": 121744,
+      "tokens_out": 667
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "fix-bug",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 32.9165646429974,
+      "steps": 9,
+      "tool_calls": 8,
+      "tools": {
+        "bash": 3,
+        "glob": 1,
+        "read": 2,
+        "edit": 2
+      },
+      "tokens_in": 109690,
+      "tokens_out": 344
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "fix-bug",
+      "run": 2,
+      "passed": false,
+      "reason": "timed out",
+      "timed_out": true,
+      "wall": 900.0563630239994,
+      "steps": 157,
+      "tool_calls": 157,
+      "tools": {
+        "bash": 1,
+        "glob": 1,
+        "read": 2,
+        "edit": 153
+      },
+      "tokens_in": 3788854,
+      "tokens_out": 20064
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "implement",
+      "run": 0,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 18.22284880100051,
+      "steps": 3,
+      "tool_calls": 2,
+      "tools": {
+        "glob": 1,
+        "read": 1
+      },
+      "tokens_in": 33106,
+      "tokens_out": 38
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "implement",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 54.87908423099725,
+      "steps": 8,
+      "tool_calls": 7,
+      "tools": {
+        "glob": 2,
+        "read": 2,
+        "bash": 2,
+        "edit": 1
+      },
+      "tokens_in": 96587,
+      "tokens_out": 1052
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "implement",
+      "run": 2,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 20.101093133001996,
+      "steps": 3,
+      "tool_calls": 3,
+      "tools": {
+        "glob": 2,
+        "read": 1
+      },
+      "tokens_in": 33387,
+      "tokens_out": 93
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "refactor",
+      "run": 0,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 19.469441550001648,
+      "steps": 3,
+      "tool_calls": 2,
+      "tools": {
+        "glob": 1,
+        "read": 1
+      },
+      "tokens_in": 33096,
+      "tokens_out": 84
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "refactor",
+      "run": 1,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 44.617632846999186,
+      "steps": 12,
+      "tool_calls": 11,
+      "tools": {
+        "glob": 1,
+        "read": 3,
+        "grep": 2,
+        "edit": 4,
+        "bash": 1
+      },
+      "tokens_in": 143411,
+      "tokens_out": 721
+    },
+    {
+      "target": "vllm-mac",
+      "model": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+      "task": "refactor",
+      "run": 2,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 42.5474796769995,
+      "steps": 12,
+      "tool_calls": 11,
+      "tools": {
+        "todowrite": 2,
+        "read": 3,
+        "edit": 4,
+        "grep": 1,
+        "bash": 1
+      },
+      "tokens_in": 142291,
+      "tokens_out": 670
+    }
+  ]
+}
