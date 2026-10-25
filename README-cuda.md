@@ -66,6 +66,48 @@ Why each flag:
   (use `--max-num-seqs 1`).
 - `--host 127.0.0.1`: no authentication; use `--api-key` if you bind to `0.0.0.0`.
 
+## Gemma 4 26B-A4B, 4-bit (for the OpenCode benchmark)
+
+Model: [`cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4`](https://huggingface.co/cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4)
+at revision `76373001e106330a6815f237ef00838c7fed9356` (not gated, Apache-2.0). It is a
+compressed-tensors `pack-quantized` W4A16 build (int4 weights, group size 32, symmetric, 16-bit
+activations) of `google/gemma-4-26B-A4B-it-qat-q4_0-unquantized`, i.e. the same QAT checkpoint family
+as Ollama's `gemma4:26b-a4b-it-qat`. 17.2 GB download. vLLM runs it with Marlin kernels on Ampere
+(`MarlinLinearKernel`, `MarlinExperts`). The NVFP4 builds need Blackwell and FP8 (~27 GB) does not
+fit 2x12 GB, so int4 is the option here.
+
+```bash
+cd /home/vllm
+set -a && source ~/.envvars && set +a
+export HF_HOME=/home/vllm/hf-cache VLLM_USE_FLASHINFER_SAMPLER=0
+nohup vllm-env/bin/vllm serve cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4 \
+  --revision 76373001e106330a6815f237ef00838c7fed9356 \
+  --host 0.0.0.0 --port 8000 \
+  --tensor-parallel-size 2 --gpu-memory-utilization 0.93 \
+  --max-model-len 131072 --max-num-seqs 2 \
+  --language-model-only \
+  --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4 \
+  --enable-prompt-tokens-details \
+  > logs/vllm-serve-26b.log 2>&1 &
+```
+
+- Served model id: `cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4`; from the LAN `http://cv-ai:8000/v1`
+  (192.168.1.4). No `--api-key`: anyone on the LAN can use it while it runs.
+- Ready about 2 minutes after launch once downloaded. 8.43 GiB of weights per GPU, 138,498 tokens of
+  KV cache (bf16), so the full 131072 window fits for one request (1.06x concurrency at full length;
+  `--max-num-seqs 2` lets a short side request, e.g. an agent's title call, run alongside).
+  About 11.4 + 11.2 GB in use.
+- `--language-model-only` is what makes 131072 fit: without it the vision and audio encoders take
+  ~1.1 GiB per GPU and startup fails with "1.83 GiB KV cache is needed ... available 0.66 GiB",
+  estimated maximum model length 8768. OpenCode sends text only, so nothing is lost. Images are
+  rejected by this server.
+- `./tool_check.py --url http://127.0.0.1:8000`: all 4 checks pass.
+- Quick speed check (`bench_llm.py --context-tokens 1000 16384 --runs 1 --no-think`): TTFT 0.52 s at
+  1k tokens and 8.6 s at 15.4k; decode 96 and 89 tok/s.
+- Stopping: kill the API server by PID and check that the `VLLM::Worker_TP0/1` processes exit too.
+  Killing only the engine left both workers orphaned (parent 1), still holding 11 GB each, until
+  they were killed by PID.
+
 ## Problems hit, in order
 
 ### 1. `ValueError: No available memory for the cache blocks` (`--gpu-memory-utilization 0.85`)
