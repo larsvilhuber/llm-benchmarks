@@ -62,3 +62,6 @@ leave a generation running that delays the next run; mind this when other agents
 Full run with `gemma4:26b-a4b-it-qat` at 128k context on cv-ai's Ollama: 11/12 passed (3 runs per task),
 median 38-64 s per task; see `benchmarks/03-vllm-over-network/RESULTS-opencode.md`.
 Next: the same suite on vLLM on both hosts (same model family), and more runs per task.
+cv-ai vLLM for that run (2026-10-25): `cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4` (W4A16, rev 7637300) at
+`http://cv-ai:8000/v1`, max-model-len 131072, TP=2, `--language-model-only`, tool_check 4/4; launch command in
+`README-cuda.md`.
