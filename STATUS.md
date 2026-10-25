@@ -2,31 +2,34 @@
 
 Consolidated results: "Findings so far" in [README.md](README.md). Keep it current when a benchmark adds results.
 
+Host names: **dual-cuda** is the Linux CUDA host, network hostname `cv-ai` (use that in URLs and ssh);
+**mac-studio** is `il-lv39-m1`.
+
 Shared between the agents working on this repo. Update your section when you finish a
 step or hand something over. Pull before you start; work on your own branch; keep edits
 to your own files. Do not fork `bench_llm.py`: propose changes to it in a small PR.
 
-## Benchmark 01: Ollama on cv-ai (CUDA) vs vLLM on mac-studio (MLX): done
+## Benchmark 01: Ollama on dual-cuda (CUDA) vs vLLM on mac-studio (MLX): done
 
 Results in `benchmarks/01-ollama-cuda-vs-vllm-mlx/`. vLLM setup on mac-studio
 is documented in `README-mlx.md`. Open item: restart vLLM there with
 `VLLM_SERVER_DEV_MODE=1 vllm serve ... --enable-sleep-mode` to allow a true cold start
 (`bench_llm.py --cold-warm` detects it automatically).
 
-## Benchmark 02: Ollama vs vLLM, both on cv-ai: first warm run done
+## Benchmark 02: Ollama vs vLLM, both on dual-cuda: first warm run done
 
-Plan and GPU-sharing rules: `benchmarks/02-cv-ai-ollama-vs-vllm/README.md`.
+Plan and GPU-sharing rules: `benchmarks/02-dual-cuda-ollama-vs-vllm/README.md`.
 
-### cv-ai agent (to do)
-- [x] Install vLLM on cv-ai (in /home/vllm); confirm `vllm serve` starts (see `README-cuda.md`)
+### dual-cuda agent (to do)
+- [x] Install vLLM on dual-cuda (in /home/vllm); confirm `vllm serve` starts (see `README-cuda.md`)
 - [x] bf16 fits 2x12 GB with `--tensor-parallel-size 2` (7.5 GB weights per GPU)
 - [x] Add `--only ollama|vllm` to `bench_llm.py` (in this PR; small change, review welcome)
 - [x] Ollama pass, then vLLM pass; `nvidia-smi` memory recorded (warm only; cold/warm still to do)
-- [x] Results committed to `benchmarks/02-cv-ai-ollama-vs-vllm/`
+- [x] Results committed to `benchmarks/02-dual-cuda-ollama-vs-vllm/`
 
-cv-ai values: vLLM 0.31.0; `vllm serve google/gemma-4-E4B-it --tensor-parallel-size 2 --gpu-memory-utilization 0.93 --max-model-len 8192 --max-num-seqs 8` with `VLLM_USE_FLASHINFER_SAMPLER=0`; Ollama model `gemma4:e4b-it-bf16`; `OLLAMA_NUM_PARALLEL` not checked (requests ran serially).
+dual-cuda values: vLLM 0.31.0; `vllm serve google/gemma-4-E4B-it --tensor-parallel-size 2 --gpu-memory-utilization 0.93 --max-model-len 8192 --max-num-seqs 8` with `VLLM_USE_FLASHINFER_SAMPLER=0`; Ollama model `gemma4:e4b-it-bf16`; `OLLAMA_NUM_PARALLEL` not checked (requests ran serially).
 
-Record here when known (agents on cv-ai and mac-studio identify themselves by hostname): vLLM version, launch command and flags, model name,
+Record here when known (agents on dual-cuda and mac-studio identify themselves by hostname): vLLM version, launch command and flags, model name,
 Ollama model tag, Ollama `OLLAMA_NUM_PARALLEL`.
 
 ### mac-studio agent (to do)
@@ -41,42 +44,42 @@ macOS firewall blocks incoming connections to the Python that runs vLLM and cann
 clients use `ssh -N -4 -L 127.0.0.1:8000:localhost:8000 <user>@192.168.1.13` and then
 `http://127.0.0.1:8000/v1`. OpenCode suite on this server: done, 8/12 (see `benchmarks/03-vllm-over-network/RESULTS-opencode.md`).
 
-cv-ai max-context run (131072 tokens, single user): done, results in the benchmark 02 README. Ollama tag
-`gemma4:e4b-it-bf16-ctx128k` (num_ctx 131072) was created on cv-ai for it; vLLM used
+dual-cuda max-context run (131072 tokens, single user): done, results in the benchmark 02 README. Ollama tag
+`gemma4:e4b-it-bf16-ctx128k` (num_ctx 131072) was created on dual-cuda for it; vLLM used
 `--max-model-len 131072 --max-num-seqs 1`. Open: vLLM prefill is slower than Ollama at long context (cause not investigated).
 
-Cold-start run on cv-ai done (vLLM with `VLLM_SERVER_DEV_MODE=1 --enable-sleep-mode`; `vllm serve` start to ready 166 s).
+Cold-start run on dual-cuda done (vLLM with `VLLM_SERVER_DEV_MODE=1 --enable-sleep-mode`; `vllm serve` start to ready 166 s).
 
-Coding-agent run on cv-ai done: `tool_check.py` passes on both engines (vLLM needs
+Coding-agent run on dual-cuda done: `tool_check.py` passes on both engines (vLLM needs
 `--enable-auto-tool-choice --tool-call-parser gemma4`); 20-turn cached session takes the same time on both
 with short answers, vLLM ahead when answers are longer (decode 1.7x). Not done: a real OpenCode session,
 a larger coding model (e.g. qwen3-coder:30b, 4-bit on vLLM).
 
 ## Known issues
-- On the short prompt Ollama emits 256 tokens, vLLM 57. Confirmed on cv-ai: Ollama produces a thinking
+- On the short prompt Ollama emits 256 tokens, vLLM 57. Confirmed on dual-cuda: Ollama produces a thinking
   trace (`reasoning` set, `content` empty, `finish_reason: length`); vLLM does not. Totals are not
   comparable; TTFT and tok/s are. Follow-up: make thinking consistent on both sides.
 
 ## OpenCode workflow (branch `opencode-workflow`, stacked on PR #1)
 
 `agent_bench.py` + `tasks/` run a real OpenCode session against any OpenAI-compatible server and
-judge it by outcome (see "Coding-agent workflow" in `TOOL.md`). Validated once against Ollama on cv-ai
+judge it by outcome (see "Coding-agent workflow" in `TOOL.md`). Validated once against Ollama on dual-cuda
 (`gemma4:e4b-it-bf16-ctx128k`, 1 run per task, smoke test only,
 `benchmarks/03-vllm-over-network/results-opencode-ollama-smoke.json`): implement passed (87 s);
 explain failed (wrong answer); refactor failed (stopped after one step with no tool calls); fix-bug
-timed out at 400 s after 10 tool calls. Not yet run against vLLM on either host (cv-ai's vLLM binds
+timed out at 400 s after 10 tool calls. Not yet run against vLLM on either host (dual-cuda's vLLM binds
 127.0.0.1; mac-studio's was not answering).
 
 Gotchas found: OpenCode takes its directory from `$PWD`, not the process cwd, so a harness must set
 `PWD` (done in `agent_bench.py`). Ollama here serves one request at a time, so a killed agent run can
-leave a generation running that delays the next run; mind this when other agents use cv-ai.
-Full run with `gemma4:26b-a4b-it-qat` at 128k context on cv-ai's Ollama: 11/12 passed (3 runs per task),
+leave a generation running that delays the next run; mind this when other agents use dual-cuda.
+Full run with `gemma4:26b-a4b-it-qat` at 128k context on dual-cuda's Ollama: 11/12 passed (3 runs per task),
 median 38-64 s per task; see `benchmarks/03-vllm-over-network/RESULTS-opencode.md`.
-cv-ai vLLM for that run (2026-10-25): `cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4` (W4A16, rev 7637300) at
+dual-cuda vLLM for that run (2026-10-25): `cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4` (W4A16, rev 7637300) at
 `http://cv-ai:8000/v1`, max-model-len 131072, TP=2, `--language-model-only`, tool_check 4/4; launch command in
 `README-cuda.md`.
 
-OpenCode on vLLM, same model family (Gemma 4 26B-A4B QAT 4-bit), 2026-10-25: cv-ai vLLM 8/12 (median passing run
-16 s), mac-studio vLLM 8/12 (42 s), versus Ollama on cv-ai 11/12 (46 s). Both vLLM servers fail the same way (empty
+OpenCode on vLLM, same model family (Gemma 4 26B-A4B QAT 4-bit), 2026-10-25: dual-cuda vLLM 8/12 (median passing run
+16 s), mac-studio vLLM 8/12 (42 s), versus Ollama on dual-cuda 11/12 (46 s). Both vLLM servers fail the same way (empty
 turns, edit loops); cause not yet found. See `benchmarks/03-vllm-over-network/RESULTS-opencode.md`. Open: start
 mac-studio vLLM with `--enable-prompt-tokens-details` so cache hits are visible.

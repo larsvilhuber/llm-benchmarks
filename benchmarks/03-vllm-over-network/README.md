@@ -1,4 +1,4 @@
-# 03: Large models and coding-agent backends, cv-ai vs mac-studio
+# 03: Large models and coding-agent backends, dual-cuda vs mac-studio
 
 Status: the OpenCode runs of Part 2 are done ([RESULTS-opencode.md](RESULTS-opencode.md)).
 Part 1 (capacity) and Claude Code as the agent are still to do. This page is the original plan.
@@ -6,7 +6,7 @@ Part 1 (capacity) and Claude Code as the agent are still to do. This page is the
 ## Questions
 
 1. **Capacity:** what is the largest model, and the longest context, each host can serve
-   usefully? cv-ai has 2x12 GB of VRAM (CUDA); mac-studio has about 50 GB of unified memory
+   usefully? dual-cuda has 2x12 GB of VRAM (CUDA); mac-studio has about 50 GB of unified memory
    (Metal). Each wins on a different axis (CUDA throughput vs memory size), so which wins
    depends on model size.
 2. **Agent backend:** can either host act as the private backend for a coding agent? Scope
@@ -29,21 +29,21 @@ KV cache), and the largest `--max-model-len` that starts reliably. Then, at that
 - Short-prompt TTFT and decode tok/s, as in benchmarks 01 and 02, for continuity.
 
 Candidates are chosen to bracket each host's limit. Starting points, already present in
-cv-ai's Ollama (so known to exist; vLLM needs a compatible format for each host):
+dual-cuda's Ollama (so known to exist; vLLM needs a compatible format for each host):
 
 | Model (class) | Why |
 |---|---|
 | Gemma 4 E4B (about 8B) | baseline from 01/02 |
 | gpt-oss 20B | fits both; tool-calling oriented |
 | Gemma 4 26B-A4B (MoE) | mid size, few active parameters |
-| Qwen3-Coder 30B (MoE) | coding-specific; about 18 GB at 4-bit, the likely cv-ai limit |
+| Qwen3-Coder 30B (MoE) | coding-specific; about 18 GB at 4-bit, the likely dual-cuda limit |
 | Qwen 27B-class dense | dense models stress memory bandwidth |
 | a 70B-class model at 4-bit (about 40 GB) | probably only mac-studio can hold it |
 
 Quantization will differ per host (AWQ/GPTQ/FP8 on CUDA, MLX 4/8-bit on Metal), so each
 result states the exact model repo and quantization; "same model" means same weights family,
 not byte-identical files. Expectation to test, not assume: MoE models with few active parameters
-suit both hosts, while dense models above about 24 GB cannot run on cv-ai at all.
+suit both hosts, while dense models above about 24 GB cannot run on dual-cuda at all.
 
 ## Part 2: coding-agent backend
 
@@ -100,7 +100,7 @@ or the local model.
 1. Confirm 02 is done and merged; record vLLM version and flags for both hosts in `STATUS.md`.
 2. Run the compatibility checks on each host with the smallest model that passes tool
    calling, and note which hosts pass.
-3. Part 1: capacity sweep per model per host. Stop Ollama on cv-ai while vLLM runs (GPU
+3. Part 1: capacity sweep per model per host. Stop Ollama on dual-cuda while vLLM runs (GPU
    memory; see 02).
 4. Part 2: for each host and the best model that fits it, run the task suite with Claude Code.
    Open agents (opencode first) are a later round.
