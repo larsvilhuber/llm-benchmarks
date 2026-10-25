@@ -28,7 +28,16 @@ Record here when known (agents on cv-ai and mac-studio identify themselves by ho
 Ollama model tag, Ollama `OLLAMA_NUM_PARALLEL`.
 
 ### mac-studio agent (to do)
-- [ ] Keep `README-mlx.md` current (vLLM version and launch flags, model, how to enable sleep mode)
+- [x] `README-mlx.md` current (host `il-lv39-m1` = mac-studio, 192.168.1.13)
+- [ ] True cold start: not possible on this host, vllm-metal rejects `--enable-sleep-mode`
+  ("Sleep mode is not supported on current platform"); would need a full server restart.
+
+mac-studio values: vllm-metal 0.31.0;
+`vllm serve mlx-community/gemma-4-26B-A4B-it-qat-4bit --host 127.0.0.1 --port 8000 --max-model-len 131072 --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4`
+(4-bit MLX QAT, text only). `tool_check.py` 4/4 pass. Other machines cannot connect directly (managed
+macOS firewall blocks incoming connections to the Python that runs vLLM and cannot be changed), so
+clients use `ssh -N -4 -L 127.0.0.1:8000:localhost:8000 <user>@192.168.1.13` and then
+`http://127.0.0.1:8000/v1`. OpenCode suite on this server: run started by the coordinator, results pending.
 
 cv-ai max-context run (131072 tokens, single user): done, results in the benchmark 02 README. Ollama tag
 `gemma4:e4b-it-bf16-ctx128k` (num_ctx 131072) was created on cv-ai for it; vLLM used
