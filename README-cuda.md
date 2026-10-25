@@ -1,6 +1,6 @@
-# Serving Gemma 4 with vLLM on CUDA (cv-ai, 2x RTX 3060 12 GB)
+# Serving Gemma 4 with vLLM on CUDA (dual-cuda, 2x RTX 3060 12 GB)
 
-Notes from installing vLLM 0.31.0 on cv-ai (Linux, 2x NVIDIA GeForce RTX 3060 12 GB,
+Notes from installing vLLM 0.31.0 on dual-cuda (Linux, 2x NVIDIA GeForce RTX 3060 12 GB,
 driver 580.178.04 / CUDA 13.0, 24 cores, 30 GB RAM, PCIe only, no NVLink) and serving
 `google/gemma-4-E4B-it` in bf16 across both GPUs. Companion to [README-mlx.md](README-mlx.md).
 
@@ -156,4 +156,4 @@ curl localhost:8000/v1/chat/completions -H 'Content-Type: application/json' \
 vLLM reserves ~93% of both cards while running, so it and an Ollama model cannot be loaded
 together. Unload Ollama (`keep_alive: 0`, `/api/ps` empty) before starting vLLM, and stop vLLM
 before loading an Ollama model. Benchmark 02 runs them in sequence; see
-[benchmarks/02-cv-ai-ollama-vs-vllm](benchmarks/02-cv-ai-ollama-vs-vllm/).
+[benchmarks/02-dual-cuda-ollama-vs-vllm](benchmarks/02-dual-cuda-ollama-vs-vllm/).
