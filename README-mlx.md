@@ -38,9 +38,8 @@ model_memory=50.47GB, overhead=1.22GB, kv_budget=-0.47GB.
 The bf16 weights (~50 GB) fill the ~51 GB of Metal memory vLLM may use on a
 64 GB machine, leaving nothing for the KV cache. Options:
 
-- Use a 4-bit MLX build (~15-18 GB), e.g.
-  `mlx-community/gemma-4-26B-A4B-it-qat-4bit`. **Not verified:** the run was
-  started but stopped before we confirmed it loaded under vllm-metal.
+- Use a 4-bit MLX build (~15-18 GB): `mlx-community/gemma-4-26B-A4B-it-qat-4bit`.
+  **This works**, see "Serving the 26B model" below.
 - Raise `--gpu-memory-utilization` (e.g. 0.98) and lower `--max-model-len`.
   Untested; leaves only ~2 GB for KV cache.
 - Use a smaller model (what we did, below).
@@ -64,6 +63,28 @@ curl localhost:8000/v1/chat/completions -H 'Content-Type: application/json' \
 
 There is no authentication. Add `--api-key <key>` if the port is reachable by
 anyone else.
+
+## Serving the 26B model (works): 4-bit MLX, tool calling, 131072 context
+
+```bash
+set -a && source ~/.envvars && set +a
+vllm serve mlx-community/gemma-4-26B-A4B-it-qat-4bit \
+  --host 127.0.0.1 --port 8000 \
+  --max-model-len 131072 \
+  --enable-auto-tool-choice --tool-call-parser gemma4 --reasoning-parser gemma4
+```
+
+- Repo `mlx-community/gemma-4-26B-A4B-it-qat-4bit` (MLX, QAT, 4-bit). The first start downloads it.
+- vllm-metal 0.31.0 accepts the tool-calling flags and the `gemma4` parsers.
+  `./tool_check.py --url http://127.0.0.1:8000` passes all 4 checks (single call, round trip,
+  streaming, tool choice), so this host can be an agent backend.
+- Serves text only: vllm-metal logs "Gemma 4 vision disabled" for a repo id that is not a local
+  checkpoint directory.
+- **No sleep mode.** `--enable-sleep-mode` fails at startup with
+  `Sleep mode is not supported on current platform`. A true cold start on this host means
+  stopping and restarting `vllm serve`.
+- `--host 127.0.0.1` because other machines are blocked by the firewall (Problem 3); reach it
+  through an SSH tunnel.
 
 ## Problem 2: `OSError: [Errno 48] Address already in use`
 
@@ -92,10 +113,17 @@ The fix would be `socketfilterfw --unblockapp <that path>` (needs sudo), but on 
 managed Mac firewall settings cannot be changed from the command line. The rule is
 also tied to the Cellar path, so a Homebrew Python upgrade can bring it back.
 
-Workaround (outbound connections are not firewalled; **untested**): an SSH reverse
-tunnel from the Mac to the client machine:
+Workaround: an SSH tunnel opened **from the client**. sshd on the Mac is reachable
+(port 22 is not blocked), and the forwarded connection reaches vLLM on the Mac's own
+loopback, so the Python firewall rule does not apply:
 
 ```bash
-ssh -N -R 8000:localhost:8000 user@other-server
-# on other-server: http://localhost:8000/v1
+# run on the client machine; <mac-ip> is this Mac's LAN address
+ssh -N -4 -L 127.0.0.1:8000:localhost:8000 <user>@<mac-ip>
+# on the client: http://127.0.0.1:8000/v1
 ```
+
+`-4` and the explicit `127.0.0.1` avoid `bind [::1]:8000: Cannot assign requested address`
+on clients without an IPv6 loopback. Use `127.0.0.1`, not `localhost`, in the client URL for
+the same reason. A reverse tunnel (`ssh -R`, started from the Mac) also avoids the firewall
+but was not tried.
