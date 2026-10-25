@@ -1,0 +1,88 @@
+{
+  "agent": "opencode",
+  "targets": [
+    {
+      "name": "ollama",
+      "url": "http://cv-ai:11434",
+      "model": "gemma4:e4b-it-bf16-ctx128k"
+    }
+  ],
+  "runs": [
+    {
+      "target": "ollama",
+      "model": "gemma4:e4b-it-bf16-ctx128k",
+      "task": "explain",
+      "run": 0,
+      "passed": false,
+      "reason": "answer lacks ['15']",
+      "timed_out": false,
+      "wall": 50.614076496101916,
+      "steps": 4,
+      "tool_calls": 4,
+      "tools": {
+        "grep": 2,
+        "read": 1,
+        "glob": 1
+      },
+      "tokens_in": 43465,
+      "tokens_out": 1115
+    },
+    {
+      "target": "ollama",
+      "model": "gemma4:e4b-it-bf16-ctx128k",
+      "task": "fix-bug",
+      "run": 0,
+      "passed": false,
+      "reason": "timed out",
+      "timed_out": true,
+      "wall": 400.0726356199011,
+      "steps": 10,
+      "tool_calls": 10,
+      "tools": {
+        "bash": 2,
+        "grep": 1,
+        "task": 1,
+        "glob": 1,
+        "read": 1,
+        "edit": 4
+      },
+      "tokens_in": 113872,
+      "tokens_out": 11606
+    },
+    {
+      "target": "ollama",
+      "model": "gemma4:e4b-it-bf16-ctx128k",
+      "task": "implement",
+      "run": 0,
+      "passed": true,
+      "reason": "ok",
+      "timed_out": false,
+      "wall": 86.94206212600693,
+      "steps": 5,
+      "tool_calls": 4,
+      "tools": {
+        "glob": 1,
+        "read": 1,
+        "edit": 1,
+        "bash": 1
+      },
+      "tokens_in": 54448,
+      "tokens_out": 1949
+    },
+    {
+      "target": "ollama",
+      "model": "gemma4:e4b-it-bf16-ctx128k",
+      "task": "refactor",
+      "run": 0,
+      "passed": false,
+      "reason": "tests fail",
+      "timed_out": false,
+      "wall": 35.862040624953806,
+      "steps": 1,
+      "tool_calls": 0,
+      "tools": {},
+      "tokens_in": 10570,
+      "tokens_out": 310
+    }
+  ]
+}

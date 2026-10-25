@@ -120,3 +120,58 @@ Example (vLLM must report cached tokens: `--enable-prompt-tokens-details`):
 `./tool_check.py --url <base URL> [--model M] [--json out.json]` checks the OpenAI tool-calling path an agent
 uses: a tool call, a round trip with the tool result, a streamed tool call, and choosing between two tools.
 Exit code 0 when all pass.
+
+## Coding-agent workflow (OpenCode)
+
+`agent_bench.py` runs a real coding agent (OpenCode) against one or more servers on the
+tasks in `tasks/`, and judges each run by an outcome (tests pass, old name gone, answer
+correct), not by reading output. Unlike the `--agent-turns` session simulation in
+`bench_llm.py`, this exercises OpenCode's actual prompts, tools and tool-call loop.
+
+One-time setup (stays inside this directory; `.tools/` and `.work/` are git-ignored):
+
+```
+npm install --prefix .tools opencode-ai
+```
+
+Run (each target is a server base URL; `/v1` is added; `OLLAMA_HOST` is `host:port`):
+
+```
+./agent_bench.py --target ollama=$OLLAMA_HOST --model gemma4:e4b-it-bf16-ctx128k --runs 5 --json results-opencode-ollama.json
+./agent_bench.py --target vllm-cv=http://cv-ai:8000,model=google/gemma-4-E4B-it --runs 5 --json results-opencode-vllm-cv.json
+```
+
+| Option | Purpose |
+|---|---|
+| `--target NAME=URL[,model=M]` | server to test (repeatable); `--model` is the default model name |
+| `--tasks fix-bug implement refactor explain` | subset of tasks (default all) |
+| `--runs N` | runs per (target, task); sampling is not deterministic, use at least 5 |
+| `--timeout S` | per-run limit in seconds (default 900); a timeout counts as a fail |
+| `--context N` | context window declared to the agent (default 131072); must not exceed what the server was started with |
+| `--opencode PATH` | OpenCode binary (default `.tools/...`, or `OPENCODE_BIN`) |
+
+Per run it reports pass/fail with the reason, wall time, agent steps, tool calls, and tokens
+in (including cache reads) and out (including reasoning); then a median summary per target and task.
+
+Isolation: every run uses a fresh copy of the task repository with its own `git init` (so the agent
+does not see this repository), and OpenCode's config, cache and sessions are redirected to `.work/`
+via `XDG_*`, so nothing is read from or written to your home directory. Tests are checked
+for tampering (`git diff` on `tests/`).
+
+Server requirements, as for any agent: tool calling enabled (vLLM:
+`--enable-auto-tool-choice --tool-call-parser <parser>`; see `tool_check.py`) and a context of at
+least 32k (OpenCode's own prompt and tool definitions are about 10k tokens). Ollama needs a model
+tag created with a large `num_ctx`, or it truncates the prompt silently.
+
+### Tasks
+
+| Task | Check |
+|---|---|
+| `fix-bug` | fix a one-line regex bug; the unit tests pass, tests unmodified |
+| `implement` | implement `merge_intervals` from its docstring; tests pass |
+| `refactor` | rename a function across three modules; tests pass and no `calc` remains |
+| `explain` | answer a question about the repo (read-only); answer names the function and the number, no files changed |
+
+Add a task by creating `tasks/<id>/repo/` (stdlib only) and `tasks/<id>/task.json`
+(`prompt` and `check`; see the existing ones). Verify the initial repo fails its check and a reference
+solution passes before using it.

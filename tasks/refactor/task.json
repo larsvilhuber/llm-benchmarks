@@ -1,0 +1,3 @@
+{"id": "refactor",
+ "prompt": "Rename the function `calc` in shop/pricing.py to `compute_total` and update every caller in the repository so nothing refers to the old name any more. Run the tests with `python3 -m unittest discover -s tests -t .` and make them pass. Do not change the tests.",
+ "check": {"tests": true, "forbid": {"glob": "shop/*.py", "regex": "\\bcalc\\b"}}}
