@@ -62,3 +62,8 @@ leave a generation running that delays the next run; mind this when other agents
 Full run with `gemma4:26b-a4b-it-qat` at 128k context on cv-ai's Ollama: 11/12 passed (3 runs per task),
 median 38-64 s per task; see `benchmarks/03-vllm-over-network/RESULTS-opencode.md`.
 Next: the same suite on vLLM on both hosts (same model family), and more runs per task.
+
+OpenCode on vLLM, same model family (Gemma 4 26B-A4B QAT 4-bit), 2026-10-25: cv-ai vLLM 8/12 (median passing run
+16 s), mac-studio vLLM 8/12 (42 s), versus Ollama on cv-ai 11/12 (46 s). Both vLLM servers fail the same way (empty
+turns, edit loops); cause not yet found. See `benchmarks/03-vllm-over-network/RESULTS-opencode.md`. Open: start
+mac-studio vLLM with `--enable-prompt-tokens-details` so cache hits are visible.
