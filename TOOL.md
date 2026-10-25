@@ -94,3 +94,29 @@ The speedup table is printed per phase (cold and warm).
 - Ollama's default context window is smaller than the model maximum; the short
   prompts here do not hit it.
 - vLLM on macOS (Metal) performance differs from CUDA; results are specific to this hardware.
+
+## One engine at a time, long context, agent sessions
+
+| Option | Purpose |
+|---|---|
+| `--only ollama\|vllm` | benchmark one engine (when both share the GPUs and must run in sequence); only that URL is needed |
+| `--context-tokens N ...` | instead of `--prompts`, filler prompts of about N tokens, unique per request (no prefix-cache hits); prints the server's prompt token count |
+| `--agent-turns N` | N-turn coding-agent-shaped session: fixed system prompt, a tool output appended each turn, full history resent (prefix cache can hit); prints cached tokens per turn |
+| `--agent-prefix T` / `--agent-step S` | agent mode: system prompt size (default 15000) / tokens appended per turn (default 1500) |
+| `--agent-interleave T` | agent mode: send an unrelated T-token request between turns (another user on the server) |
+| `--no-think` | send `reasoning_effort: "none"` (turns off Gemma 4 thinking on Ollama; vLLM's default) |
+
+Example (vLLM must report cached tokens: `--enable-prompt-tokens-details`):
+
+```
+./bench_llm.py --only vllm --ollama-model x --agent-turns 20 --agent-prefix 15000 --agent-step 2500 \
+  --max-tokens 256 --no-think --json results-agent-vllm.json
+```
+
+`--ollama-model` is still required by the parser; with `--only vllm` its value is unused.
+
+## Tool-calling check
+
+`./tool_check.py --url <base URL> [--model M] [--json out.json]` checks the OpenAI tool-calling path an agent
+uses: a tool call, a round trip with the tool result, a streamed tool call, and choosing between two tools.
+Exit code 0 when all pass.
