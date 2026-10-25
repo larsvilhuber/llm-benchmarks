@@ -110,5 +110,5 @@ or the local model.
 ## Results
 
 - Part 2, OpenCode on three backends: [RESULTS-opencode.md](RESULTS-opencode.md); summary in
-  [FINDINGS.md](../../FINDINGS.md).
+  the top-level [README](../../README.md#findings-so-far-2026-10-25).
 - Part 1 and Claude Code: not run yet.

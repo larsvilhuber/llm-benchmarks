@@ -1,6 +1,6 @@
 # Status and handoff
 
-Consolidated results: [FINDINGS.md](FINDINGS.md). Keep it current when a benchmark adds results.
+Consolidated results: "Findings so far" in [README.md](README.md). Keep it current when a benchmark adds results.
 
 Shared between the agents working on this repo. Update your section when you finish a
 step or hand something over. Pull before you start; work on your own branch; keep edits
